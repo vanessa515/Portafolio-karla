@@ -11,7 +11,7 @@ import {
   Send,
 } from "lucide-react";
 
-import { supabase } from "@/lib/supabase";
+
 
 export default function Contact() {
   const [nombre, setNombre] = useState("");
@@ -53,48 +53,15 @@ export default function Contact() {
       return;
     }
 
-    try {
-      setEnviando(true);
-      setEstado("");
-      setTipoEstado("");
-
-      const { error } = await supabase
-        .from("mensajes_contacto")
-        .insert([
-          {
-            nombre: nombreLimpio,
-            correo: correoLimpio,
-            mensaje: mensajeLimpio,
-          },
-        ]);
-
-      if (error) {
-        console.error("Error Supabase:", error);
-
-        setTipoEstado("error");
-        setEstado(
-          "No fue posible enviar el mensaje. Intenta nuevamente."
-        );
-
-        return;
-      }
-
-      setTipoEstado("success");
-      setEstado("Mensaje enviado correctamente.");
-
-      setNombre("");
-      setCorreo("");
-      setMensaje("");
-    } catch (error) {
-      console.error("Error:", error);
-
-      setTipoEstado("error");
-      setEstado(
-        "Ocurrió un error al enviar el mensaje."
-      );
-    } finally {
-      setEnviando(false);
-    }
+    // Sitio estático: abre la aplicación de correo del visitante.
+    // No se almacena ni se envía información a un backend.
+    const asunto = encodeURIComponent(`Contacto desde portafolio — ${nombreLimpio}`);
+    const cuerpo = encodeURIComponent(
+      `Nombre: ${nombreLimpio}\nCorreo: ${correoLimpio}\n\nMensaje:\n${mensajeLimpio}`
+    );
+    window.location.href = `mailto:rubiovanessa570@gmail.com?subject=${asunto}&body=${cuerpo}`;
+    setTipoEstado("success");
+    setEstado("Se abrió tu aplicación de correo. Envía el mensaje desde allí para completar el contacto.");
   };
 
   return (

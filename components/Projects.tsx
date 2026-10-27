@@ -1,22 +1,15 @@
 "use client";
 
 import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-
-import {
   motion,
 } from "motion/react";
 
 import {
   ArrowUpRight,
   Code2,
-  RefreshCw,
 } from "lucide-react";
 
-import { supabase } from "@/lib/supabase";
+import { projects } from "@/lib/projects";
 import ProjectCard from "@/components/ProjectCard";
 
 export type ProyectoPublico = {
@@ -39,63 +32,24 @@ export type ProyectoPublico = {
 };
 
 export default function Projects() {
-  const [proyectos, setProyectos] =
-    useState<ProyectoPublico[]>([]);
-
-  const [cargando, setCargando] =
-    useState(true);
-
-  const [error, setError] =
-    useState(false);
-
-  const cargarProyectos =
-    useCallback(async () => {
-      try {
-        setCargando(true);
-        setError(false);
-
-        const {
-          data,
-          error: errorSupabase,
-        } = await supabase
-          .from("proyectos")
-          .select("*")
-          .eq("publicado", true)
-          .order("destacado", {
-            ascending: false,
-          })
-          .order("orden", {
-            ascending: true,
-          });
-
-        if (errorSupabase) {
-          console.error(
-            "Error cargando proyectos:",
-            errorSupabase
-          );
-
-          setError(true);
-          return;
-        }
-
-        setProyectos(
-          (data ?? []) as ProyectoPublico[]
-        );
-      } catch (error) {
-        console.error(
-          "Error inesperado:",
-          error
-        );
-
-        setError(true);
-      } finally {
-        setCargando(false);
-      }
-    }, []);
-
-  useEffect(() => {
-    cargarProyectos();
-  }, [cargarProyectos]);
+  const proyectos: ProyectoPublico[] = projects.map((proyecto, index) => ({
+    pk_proyecto: String(proyecto.id),
+    slug: proyecto.title.toLowerCase().replace(/\s+/g, "-"),
+    titulo: proyecto.title,
+    categoria: proyecto.category,
+    resumen: proyecto.description,
+    descripcion: proyecto.description,
+    problema: null,
+    solucion: null,
+    rol: null,
+    tecnologias: proyecto.technologies,
+    anio: Number(proyecto.year),
+    url_demo: proyecto.url ?? null,
+    url_repositorio: proyecto.github ?? null,
+    destacado: Boolean(proyecto.featured),
+    publicado: true,
+    orden: index,
+  }));
 
   const proyectoDestacado =
     proyectos.find(
@@ -161,58 +115,9 @@ export default function Projects() {
           </p>
         </div>
 
-        {/* CARGANDO */}
-
-        {cargando && (
-          <div className="mt-16 flex min-h-[360px] items-center justify-center rounded-[28px] border border-white/[0.06] bg-[#0b0e12]">
-            <div className="text-center">
-              <RefreshCw
-                size={20}
-                className="mx-auto animate-spin text-[#f35dce]"
-              />
-
-              <p className="mt-4 font-mono text-[9px] tracking-[0.15em] text-white/20">
-                LOADING_PROJECTS...
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* ERROR */}
-
-        {!cargando && error && (
-          <div className="mt-16 rounded-[28px] border border-red-400/10 bg-red-400/[0.02] px-6 py-16 text-center">
-            <p className="font-mono text-[10px] text-red-400/60">
-              PROJECT_DATABASE_ERROR
-            </p>
-
-            <button
-              type="button"
-              onClick={cargarProyectos}
-              className="mt-5 rounded-full border border-white/10 px-5 py-3 font-mono text-[9px] text-white/40 transition hover:border-[#f35dce]/30 hover:text-[#f35dce]"
-            >
-              REINTENTAR
-            </button>
-          </div>
-        )}
-
-        {/* SIN PROYECTOS */}
-
-        {!cargando &&
-          !error &&
-          proyectos.length === 0 && (
-            <div className="mt-16 rounded-[28px] border border-white/[0.06] bg-[#0b0e12] px-6 py-20 text-center">
-              <p className="font-mono text-[10px] tracking-[0.15em] text-white/20">
-                NO_PUBLISHED_PROJECTS
-              </p>
-            </div>
-          )}
-
         {/* DESTACADO */}
 
-        {!cargando &&
-          !error &&
-          proyectoDestacado && (
+        {proyectoDestacado && (
             <div className="mt-16">
               <FeaturedProject
                 proyecto={proyectoDestacado}
@@ -222,9 +127,7 @@ export default function Projects() {
 
         {/* PROYECTOS SECUNDARIOS */}
 
-        {!cargando &&
-          !error &&
-          proyectosSecundarios.length > 0 && (
+        {proyectosSecundarios.length > 0 && (
             <div className="mt-20">
               <div className="mb-8 flex items-end justify-between gap-6">
                 <div>
